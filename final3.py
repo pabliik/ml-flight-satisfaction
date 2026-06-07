@@ -98,7 +98,12 @@ print(f"\nTarget distribution in training set:\n{y_train.value_counts(normalize=
 
 scaler = StandardScaler()
 
-# Continuous features + Likert-scale columns (max value == 5)
+# Continuous features scaled to remove unit bias (StandardScaler: mean=0, std=1).
+# Survey rating columns (Likert scale 1–5) are also scaled: although ordinal,
+# their ranges differ from binary-encoded columns (0/1) and Class_encoded (0–2),
+# so scaling puts all features on a comparable magnitude — important for
+# distance-based models (KNN) and regularised models (Logistic Regression).
+# The max==5 filter reliably identifies all Likert columns in this dataset.
 numerical_cols = ['Age', 'Flight Distance', 'Arrival Delay']
 likert_cols = [col for col in X_train.columns if X_train[col].max() == 5]
 cols_to_scale = numerical_cols + likert_cols
@@ -227,8 +232,17 @@ print("\n" + "=" * 60)
 print("STATISTICAL SIGNIFICANCE")
 print("=" * 60)
 
+# Paired t-test compares the per-fold CV scores of two models directly.
+# Because both models are evaluated on the same folds, the scores are paired —
+# a paired t-test accounts for fold-to-fold variance and is more sensitive
+# than an independent-samples test. Null hypothesis: the two models have equal
+# mean F1. A p-value < 0.05 indicates the difference is statistically
+# significant and unlikely due to random variation across folds.
+
 stat1, p1 = stats.ttest_rel(tree_scores['test_score'], lr_scores['test_score'])
 print(f"Decision Tree vs Logistic Regression  |  t={stat1:.4f}, p={p1:.4f}")
+print(f"  → {'Significant difference' if p1 < 0.05 else 'No significant difference'} (α=0.05)")
 
 stat2, p2 = stats.ttest_rel(tree_scores['test_score'], knn_scores['test_score'])
 print(f"Decision Tree vs KNN                  |  t={stat2:.4f}, p={p2:.4f}")
+print(f"  → {'Significant difference' if p2 < 0.05 else 'No significant difference'} (α=0.05)")
