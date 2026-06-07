@@ -11,7 +11,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report, accuracy_score
 
 # 1. Load and Clean Data
-df = pd.read_csv('../data/airline_passenger_satisfaction.csv')
+df = pd.read_csv('data/airline_passenger_satisfaction.csv')
 df = df.drop(columns=['ID'])
 df = df.dropna(subset=['Arrival Delay'])
 
